@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 380" font-family="system-ui, sans-serif">
+  <!-- Background -->
+  <rect width="600" height="380" fill="#fafafa"/>
+
+  <!-- Axes -->
+  <line x1="70" y1="20" x2="70" y2="310" stroke="#1a1a1a" stroke-width="1.5"/>
+  <line x1="70" y1="310" x2="570" y2="310" stroke="#1a1a1a" stroke-width="1.5"/>
+
+  <!-- Y-axis label -->
+  <text x="18" y="170" text-anchor="middle" font-size="13" fill="#1a1a1a" transform="rotate(-90, 18, 170)">Error</text>
+
+  <!-- X-axis label -->
+  <text x="320" y="345" text-anchor="middle" font-size="13" fill="#1a1a1a">Model Complexity</text>
+
+  <!-- Axis arrows -->
+  <polygon points="70,20 66,28 74,28" fill="#1a1a1a"/>
+  <polygon points="570,310 562,306 562,314" fill="#1a1a1a"/>
+
+  <!-- Bias² curve (decreasing) -->
+  <path d="M 90,60 C 150,70 250,180 400,260 C 450,275 500,282 550,285"
+        fill="none" stroke="#444" stroke-width="2" stroke-dasharray="8,4"/>
+
+  <!-- Variance curve (increasing) -->
+  <path d="M 90,285 C 150,282 250,270 320,240 C 400,200 480,130 550,55"
+        fill="none" stroke="#888" stroke-width="2" stroke-dasharray="4,4"/>
+
+  <!-- Irreducible error (flat line) -->
+  <line x1="90" y1="295" x2="550" y2="295" stroke="#bbb" stroke-width="1.5" stroke-dasharray="2,3"/>
+
+  <!-- Total error curve (U-shaped) -->
+  <path d="M 90,60 C 140,100 190,160 250,190
+           C 290,205 310,208 330,205
+           C 380,190 430,155 480,105 C 520,65 540,45 550,35"
+        fill="none" stroke="#1a1a1a" stroke-width="2.5"/>
+
+  <!-- Optimal point marker -->
+  <circle cx="310" cy="208" r="4" fill="#1a1a1a"/>
+  <line x1="310" y1="208" x2="310" y2="310" stroke="#1a1a1a" stroke-width="1" stroke-dasharray="3,3" opacity="0.4"/>
+  <text x="310" y="328" text-anchor="middle" font-size="10" fill="#666">optimal</text>
+
+  <!-- Legend -->
+  <line x1="360" y1="35" x2="385" y2="35" stroke="#1a1a1a" stroke-width="2.5"/>
+  <text x="390" y="39" font-size="11" fill="#1a1a1a">Total Error</text>
+
+  <line x1="360" y1="55" x2="385" y2="55" stroke="#444" stroke-width="2" stroke-dasharray="8,4"/>
+  <text x="390" y="59" font-size="11" fill="#444">Bias²</text>
+
+  <line x1="360" y1="75" x2="385" y2="75" stroke="#888" stroke-width="2" stroke-dasharray="4,4"/>
+  <text x="390" y="79" font-size="11" fill="#888">Variance</text>
+
+  <line x1="360" y1="95" x2="385" y2="95" stroke="#bbb" stroke-width="1.5" stroke-dasharray="2,3"/>
+  <text x="390" y="99" font-size="11" fill="#bbb">Irreducible Error (σ²)</text>
+</svg>

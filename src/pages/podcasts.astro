@@ -2,16 +2,14 @@
 import Base from '../layouts/Base.astro';
 import { getCollection } from 'astro:content';
 
-const software = await getCollection('software');
-const sorted = software
-  .filter((item) => !item.data.github)
-  .sort((a, b) => (b.data.year || 0) - (a.data.year || 0));
+const podcasts = await getCollection('podcasts');
+const sorted = podcasts.sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
 ---
 
-<Base title="Software · Bernie Hogan">
+<Base title="Podcasts · Bernie Hogan">
   <p class="muted"><a href="/">← Bernie Hogan</a></p>
 
-  <h1>Software</h1>
+  <h1>Podcasts</h1>
 
   {sorted.map(async (item) => {
     const { Content } = await item.render();
@@ -23,12 +21,10 @@ const sorted = software
           ) : (
             item.data.title
           )}
-          {item.data.status && <span class="muted"> · {item.data.status}</span>}
-          {item.data.github && (
-            <span class="muted"> · <a href={`https://github.com/${item.data.github}`}>GitHub</a></span>
-          )}
         </div>
-        {item.data.year && <div class="work-meta">{item.data.year}</div>}
+        <div class="work-meta">
+          {item.data.outlet} · {item.data.date}
+        </div>
         <div class="work-annotation"><Content /></div>
       </div>
     );

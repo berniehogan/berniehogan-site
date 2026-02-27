@@ -98,4 +98,24 @@ const artifactThemes = defineCollection({
   }),
 });
 
-export const collections = { works, themes, software, students, press, consulting, artifacts, artifactThemes, blog };
+const podcasts = defineCollection({
+  type: 'content',
+  schema: z.object({
+    title: z.string(),
+    outlet: z.string(),
+    date: z.string(),
+    url: z.string().optional(),
+  }),
+});
+
+const video = defineCollection({
+  type: 'content',
+  schema: z.object({
+    title: z.string(),
+    outlet: z.string(),
+    date: z.string(),
+    url: z.string().optional(),
+  }),
+});
+
+export const collections = { works, themes, software, students, press, consulting, artifacts, artifactThemes, blog, podcasts, video };

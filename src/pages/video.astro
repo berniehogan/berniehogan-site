@@ -2,14 +2,14 @@
 import Base from '../layouts/Base.astro';
 import { getCollection } from 'astro:content';
 
-const press = await getCollection('press');
-const sorted = press.sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
+const video = await getCollection('video');
+const sorted = video.sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
 ---
 
-<Base title="Press · Bernie Hogan">
+<Base title="Video · Bernie Hogan">
   <p class="muted"><a href="/">← Bernie Hogan</a></p>
 
-  <h1>Press</h1>
+  <h1>Video</h1>
 
   {sorted.map(async (item) => {
     const { Content } = await item.render();

@@ -3,30 +3,22 @@ import Base from '../layouts/Base.astro';
 import { getCollection } from 'astro:content';
 
 const software = await getCollection('software');
-const sorted = software
-  .filter((item) => !item.data.github)
+const codeRepos = software
+  .filter((item) => item.data.github)
   .sort((a, b) => (b.data.year || 0) - (a.data.year || 0));
 ---
 
-<Base title="Software · Bernie Hogan">
+<Base title="Learning Code · Bernie Hogan">
   <p class="muted"><a href="/">← Bernie Hogan</a></p>
 
-  <h1>Software</h1>
+  <h1>Learning Code</h1>
 
-  {sorted.map(async (item) => {
+  {codeRepos.map(async (item) => {
     const { Content } = await item.render();
     return (
       <div class="work-entry">
         <div class="work-title">
-          {item.data.url ? (
-            <a href={item.data.url}>{item.data.title}</a>
-          ) : (
-            item.data.title
-          )}
-          {item.data.status && <span class="muted"> · {item.data.status}</span>}
-          {item.data.github && (
-            <span class="muted"> · <a href={`https://github.com/${item.data.github}`}>GitHub</a></span>
-          )}
+          <a href={`https://github.com/${item.data.github}`}>{item.data.title}</a>
         </div>
         {item.data.year && <div class="work-meta">{item.data.year}</div>}
         <div class="work-annotation"><Content /></div>

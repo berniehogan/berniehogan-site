@@ -1,0 +1,279 @@
+@import "tailwindcss";
+
+@source "../components/**/*.tsx";
+@source "../components/**/*.jsx";
+@source "../pages/**/*.astro";
+
+/* Site reset - in base layer so Tailwind utilities override it */
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html {
+    font-size: 18px;
+    line-height: 1.6;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    color: var(--color-text);
+    background: var(--color-bg);
+    padding: calc(var(--spacing-site) * 2);
+  }
+
+  main {
+    max-width: var(--max-width);
+    margin: 0 auto;
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    line-height: 1.3;
+    margin-bottom: var(--spacing-site);
+  }
+
+  h1 {
+    font-size: 1.75rem;
+    margin-bottom: calc(var(--spacing-site) * 0.5);
+  }
+
+  h2 {
+    font-size: 1.25rem;
+    margin-top: calc(var(--spacing-site) * 2);
+  }
+
+  p {
+    margin-bottom: var(--spacing-site);
+  }
+
+  a {
+    color: var(--color-link);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+  }
+
+  a:hover {
+    color: var(--color-link-hover);
+  }
+
+  nav {
+    margin: calc(var(--spacing-site) * 2) 0;
+  }
+
+  nav ul {
+    list-style: none;
+  }
+
+  nav li {
+    margin-bottom: 0.5rem;
+  }
+
+  footer {
+    margin-top: calc(var(--spacing-site) * 3);
+    padding-top: var(--spacing-site);
+    border-top: 1px solid var(--color-border);
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+  }
+}
+
+/* CSS custom properties for site theming */
+@layer base {
+  :root {
+    --color-text: #1a1a1a;
+    --color-text-muted: #666;
+    --color-bg: #fafafa;
+    --color-border: #e0e0e0;
+    --color-link: #1a1a1a;
+    --color-link-hover: #444;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --font-serif: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+    --max-width: 42rem;
+    --spacing-site: 1.5rem;
+  }
+}
+
+/* Site-specific component styles */
+@layer components {
+  .muted {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+  }
+
+  /* Timeline-style works listing */
+  .works-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .year-group {
+    display: grid;
+    grid-template-columns: 4rem 1fr;
+    gap: 1rem;
+    border-top: 1px solid var(--color-border);
+    padding-top: 0.75rem;
+  }
+
+  .year-group:first-child {
+    border-top: none;
+  }
+
+  .year-label {
+    font-family: var(--font-serif);
+    font-size: 1rem;
+    color: var(--color-text-muted);
+    position: sticky;
+    top: 1rem;
+    align-self: start;
+  }
+
+  .year-works {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-bottom: 0.75rem;
+  }
+
+  .work-entry {
+    padding: 0.5rem 0;
+  }
+
+  .work-entry:last-child {
+    border-bottom: none;
+  }
+
+  .work-title {
+    font-family: var(--font-serif);
+    font-size: 1rem;
+    line-height: 1.4;
+    margin-bottom: 0.15rem;
+  }
+
+  .work-meta {
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+    margin-bottom: 0;
+  }
+
+  .work-annotation {
+    font-size: 0.95rem;
+  }
+
+  .themes-list {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    margin-top: 0.25rem;
+    margin-bottom: 0;
+  }
+
+  /* Inline link badges for DOI / PDF / Preprint */
+  .work-links {
+    display: inline-flex;
+    gap: 0.4rem;
+    margin-top: 0.3rem;
+  }
+
+  .work-link {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-muted);
+    text-decoration: none;
+    border: 1px solid var(--color-border);
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+  }
+
+  .work-link:hover {
+    color: var(--color-text);
+    border-color: var(--color-text-muted);
+  }
+
+  /* Year quick-nav */
+  .year-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.8rem;
+  }
+
+  .year-nav a {
+    color: var(--color-text-muted);
+    text-decoration: none;
+    padding: 0.15rem 0.4rem;
+    border-radius: 3px;
+  }
+
+  .year-nav a:hover {
+    background: var(--color-border);
+    color: var(--color-text);
+  }
+
+  /* Mobile: stack year above works */
+  @media (max-width: 480px) {
+    .year-group {
+      grid-template-columns: 1fr;
+      gap: 0.25rem;
+    }
+
+    .year-label {
+      position: static;
+      font-weight: 500;
+    }
+  }
+
+  /* Two-column layout for work entries on theme pages */
+  .work-entry-grid {
+    display: grid;
+    grid-template-columns: 20% 1fr;
+    gap: 1rem;
+    align-items: start;
+  }
+
+  .work-image img {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    border-radius: 2px;
+  }
+
+  @media (max-width: 480px) {
+    .work-entry-grid {
+      grid-template-columns: 15% 1fr;
+      gap: 0.75rem;
+    }
+  }
+
+  .artifact-frame {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: #fff;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.04);
+  }
+
+  .artifact-frame::before {
+    content: 'Interactive';
+    display: block;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-text-muted);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .artifact-container {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+}

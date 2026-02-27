@@ -1,0 +1,65 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+
+const works = await getCollection('works');
+const sortedWorks = works.sort((a, b) => b.data.year - a.data.year);
+
+// Group by year for chronological display
+const worksByYear = sortedWorks.reduce((acc, work) => {
+  const year = work.data.year;
+  if (!acc[year]) acc[year] = [];
+  acc[year].push(work);
+  return acc;
+}, {} as Record<number, typeof works>);
+
+const years = Object.keys(worksByYear)
+  .map(Number)
+  .sort((a, b) => b - a);
+---
+
+<Base title="Works · Bernie Hogan">
+  <p class="muted"><a href="/">← Bernie Hogan</a></p>
+
+  <h1>Works</h1>
+
+  <nav class="year-nav">
+    {years.map((year) => (
+      <a href={`#year-${year}`}>{year}</a>
+    ))}
+  </nav>
+
+  <div class="works-timeline">
+    {years.map((year) => (
+      <div class="year-group" id={`year-${year}`}>
+        <div class="year-label">{year}</div>
+        <div class="year-works">
+          {worksByYear[year].map((work) => (
+            <div class="work-entry">
+              <div class="work-title">
+                <a href={`/works/${work.slug}`}>{work.data.title}</a>
+              </div>
+              <div class="work-meta">
+                {work.data.venue}
+              </div>
+              <span class="work-links">
+                {work.data.doi && (
+                  <a href={`https://doi.org/${work.data.doi}`} class="work-link">DOI</a>
+                )}
+                {work.data.url && !work.data.doi && (
+                  <a href={work.data.url} class="work-link">Link</a>
+                )}
+                {work.data.pdf && (
+                  <a href={work.data.pdf} class="work-link">PDF</a>
+                )}
+                {work.data.preprint && (
+                  <a href={work.data.preprint} class="work-link">Preprint</a>
+                )}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    ))}
+  </div>
+</Base>

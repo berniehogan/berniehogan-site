@@ -1,0 +1,32 @@
+---
+import Base from '../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+
+const press = await getCollection('press');
+const sorted = press.sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
+---
+
+<Base title="Press · Bernie Hogan">
+  <p class="muted"><a href="/">← Bernie Hogan</a></p>
+
+  <h1>Press</h1>
+
+  {sorted.map(async (item) => {
+    const { Content } = await item.render();
+    return (
+      <div class="work-entry">
+        <div class="work-title">
+          {item.data.url ? (
+            <a href={item.data.url}>{item.data.title}</a>
+          ) : (
+            item.data.title
+          )}
+        </div>
+        <div class="work-meta">
+          {item.data.outlet} · {item.data.date}
+        </div>
+        <div class="work-annotation"><Content /></div>
+      </div>
+    );
+  })}
+</Base>

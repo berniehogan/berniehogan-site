@@ -1,0 +1,49 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+import { getArtifactAnnotation } from '../../data/artifactAnnotations';
+
+export async function getStaticPaths() {
+  const themes = await getCollection('artifactThemes');
+  return themes.map((theme) => ({
+    params: { theme: theme.slug },
+    props: { theme },
+  }));
+}
+
+const { theme } = Astro.props;
+const { Content } = await theme.render();
+
+const allArtifacts = await getCollection('artifacts');
+const themeArtifacts = allArtifacts.filter((a) =>
+  a.data.artifactThemes.includes(theme.slug)
+);
+---
+
+<Base title={`${theme.data.title} · Artifacts · Bernie Hogan`}>
+  <p class="muted"><a href="/artifacts">← Artifacts</a></p>
+
+  <h1>{theme.data.title}</h1>
+  <p class="muted">{theme.data.focus}</p>
+
+  <div style="margin: 1.5rem 0;">
+    <Content />
+  </div>
+
+  <h2>Artifacts</h2>
+
+  {themeArtifacts.map((artifact) => {
+    const annotation = getArtifactAnnotation(artifact.slug, theme.slug);
+    return (
+      <div class="work-entry">
+        <div class="work-title">
+          <a href={`/artifacts/${artifact.slug}`}>{artifact.data.title}</a>
+        </div>
+        {artifact.data.year && <div class="work-meta">{artifact.data.year}</div>}
+        {annotation && (
+          <p class="work-annotation">{annotation}</p>
+        )}
+      </div>
+    );
+  })}
+</Base>

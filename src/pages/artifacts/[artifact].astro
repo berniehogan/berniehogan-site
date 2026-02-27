@@ -1,0 +1,87 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+import { getArtifactAnnotation } from '../../data/artifactAnnotations';
+import BouncingBall from '../../components/artifacts/BouncingBall.tsx';
+import RandomStringAnalyzer from '../../components/artifacts/random-string-analyzer.tsx';
+import ThreeFlowerComparison from '../../components/artifacts/three-flower-comparison.jsx';
+import WaveVisualization from '../../components/artifacts/wave-visualization.jsx';
+import BiasVarianceSVM from '../../components/artifacts/bias-variance-svm.tsx';
+import IsometricGrid from '../../components/artifacts/isometric-grid.tsx';
+
+export async function getStaticPaths() {
+  const artifacts = await getCollection('artifacts');
+  return artifacts.map((artifact) => ({
+    params: { artifact: artifact.slug },
+    props: { artifact },
+  }));
+}
+
+const { artifact } = Astro.props;
+const artifactThemes = await getCollection('artifactThemes');
+const { Content } = await artifact.render();
+
+// Get theme data for each theme this artifact appears in
+const itemThemes = artifactThemes
+  .filter((t) => artifact.data.artifactThemes.includes(t.slug))
+  .sort((a, b) => a.data.order - b.data.order);
+---
+
+<Base title={`${artifact.data.title} · Bernie Hogan`}>
+  <p class="muted"><a href="/artifacts">← Artifacts</a></p>
+
+  <h1>{artifact.data.title}</h1>
+
+  {artifact.data.year && <p class="work-meta">{artifact.data.year}</p>}
+
+  {(artifact.slug === 'bouncing-ball' || artifact.slug === 'random-string-analyzer' || artifact.slug === 'three-flower-comparison' || artifact.slug === 'wave-visualization' || artifact.slug === 'bias-variance-svm' || artifact.slug === 'isometric-grid') && (
+    <div class="artifact-frame">
+      <div class="artifact-container">
+        {artifact.slug === 'bouncing-ball' && <BouncingBall client:load />}
+        {artifact.slug === 'random-string-analyzer' && <RandomStringAnalyzer client:load />}
+        {artifact.slug === 'three-flower-comparison' && <ThreeFlowerComparison client:load />}
+        {artifact.slug === 'wave-visualization' && <WaveVisualization client:load />}
+        {artifact.slug === 'bias-variance-svm' && <BiasVarianceSVM client:load />}
+        {artifact.slug === 'isometric-grid' && <IsometricGrid client:load />}
+      </div>
+    </div>
+  )}
+
+  {artifact.slug === 'persistent-homology-viz' && (
+    <div class="artifact-frame">
+      <div class="artifact-container">
+        <iframe
+          src="/artifacts/persistent-homology-viz.html"
+          style="width: 100%; height: 1400px; border: none; border-radius: 4px;"
+          title="Persistent Homology Visualizations"
+        />
+      </div>
+    </div>
+  )}
+
+  <div style="margin: 2rem 0;">
+    <Content />
+  </div>
+
+  {artifact.data.url && (
+    <p>
+      <a href={artifact.data.url}>View external link →</a>
+    </p>
+  )}
+
+  <h2>Appears in themes</h2>
+
+  {itemThemes.map((theme) => {
+    const annotation = getArtifactAnnotation(artifact.slug, theme.slug);
+    return (
+      <div class="work-entry">
+        <div class="work-title">
+          <a href={`/artifact-themes/${theme.slug}`}>{theme.data.title}</a>
+        </div>
+        {annotation && (
+          <p class="work-annotation">{annotation}</p>
+        )}
+      </div>
+    );
+  })}
+</Base>

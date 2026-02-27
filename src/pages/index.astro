@@ -1,0 +1,47 @@
+---
+import Base from '../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+
+const themes = await getCollection('themes');
+const sortedThemes = themes.sort((a, b) => a.data.order - b.data.order);
+---
+
+<Base title="Bernie Hogan">
+  <h1>Bernie Hogan</h1>
+  <p class="muted">Associate Professor, Oxford Internet Institute</p>
+
+  <p>I study how technical systems shape collective knowledge production.</p>
+
+  <nav>
+    <h2>Research Themes</h2>
+    <ul>
+      {sortedThemes.map((theme) => (
+        <li>
+          <a href={`/themes/${theme.slug}`}>{theme.data.title}</a>
+        </li>
+      ))}
+    </ul>
+    <p><a href="/works">All works →</a></p>
+  </nav>
+
+  <nav>
+    <h2>Artifacts</h2>
+    <p><a href="/artifacts">Interactive demos and tools →</a></p>
+  </nav>
+
+  <nav>
+    <ul>
+      <li><a href="/software">Software</a></li>
+      <li><a href="/students">Students</a></li>
+      <li><a href="/press">Press</a></li>
+      <li><a href="/consulting">Consulting</a></li>
+    </ul>
+  </nav>
+
+  <nav>
+    <ul>
+      <li><a href="/cv">CV</a></li>
+      <li><a href="mailto:bernie.hogan@oii.ox.ac.uk">Contact</a></li>
+    </ul>
+  </nav>
+</Base>

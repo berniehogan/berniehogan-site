@@ -1,0 +1,35 @@
+---
+import Base from '../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+
+const students = await getCollection('students');
+---
+
+<Base title="Students · Bernie Hogan">
+  <p class="muted"><a href="/">← Bernie Hogan</a></p>
+
+  <h1>Students</h1>
+
+  {students.map(async (student) => {
+    const { Content } = await student.render();
+    return (
+      <div class="work-entry">
+        <div class="work-title">
+          {student.data.url ? (
+            <a href={student.data.url}>{student.data.name}</a>
+          ) : (
+            student.data.name
+          )}
+        </div>
+        <div class="work-meta">
+          {student.data.role}
+          {student.data.years && ` · ${student.data.years}`}
+        </div>
+        {student.data.currentPosition && (
+          <div class="muted">Now: {student.data.currentPosition}</div>
+        )}
+        <div class="work-annotation"><Content /></div>
+      </div>
+    );
+  })}
+</Base>

@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Persistent Homology Visualizations</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #0a0a0a;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+        h1, h2 {
+            color: #00ff88;
+            margin-bottom: 20px;
+        }
+        .viz-section {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        canvas {
+            border: 1px solid #444;
+            border-radius: 4px;
+            display: block;
+            margin: 20px 0;
+            cursor: crosshair;
+            max-width: 100%;
+            height: auto;
+        }
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        button {
+            background: #00ff88;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background: #00cc6a;
+            transform: translateY(-2px);
+        }
+        input[type="range"] {
+            width: 200px;
+        }
+        .info {
+            background: #222;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .barcode-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        @media (max-width: 768px) {
+            .barcode-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Persistent Homology: From Networks to Topological Features</h1>
+        
+        <div class="viz-section">
+            <h2>1. Egocentric Network → Filtration Process</h2>
+            <p>Click to add nodes and watch how the simplicial complex grows as we increase the filtration radius.</p>
+            <div class="controls">
+                <button onclick="clearNetwork()">Clear Network</button>
+                <button onclick="addRandomNodes()">Add Random Nodes</button>
+                <label>Filtration Radius: <input type="range" id="radius" min="0" max="150" value="0" oninput="updateFiltration()"></label>
+                <span id="radiusValue">0</span>
+            </div>
+            <canvas id="networkCanvas" width="800" height="400"></canvas>
+            <div class="info">
+                <strong>Connected Components (H₀):</strong> <span id="components">0</span> | 
+                <strong>Loops (H₁):</strong> <span id="loops">0</span>
+            </div>
+        </div>
+
+        <div class="viz-section">
+            <h2>2. Persistence Barcode Diagram</h2>
+            <p>Visual representation of topological features' birth and death during filtration.</p>
+            <div class="barcode-container">
+                <div>
+                    <h3 style="color: #ff6b6b;">H₀ Persistence (Components)</h3>
+                    <canvas id="barcodeH0" width="380" height="300"></canvas>
+                </div>
+                <div>
+                    <h3 style="color: #4ecdc4;">H₁ Persistence (Loops)</h3>
+                    <canvas id="barcodeH1" width="380" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="viz-section">
+            <h2>3. Persistence Diagram</h2>
+            <p>Each point represents a topological feature. Distance from diagonal indicates persistence.</p>
+            <canvas id="persistenceDiagram" width="400" height="400"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let nodes = [];
+        let edges = [];
+        let simplicialComplex = [];
+        let currentRadius = 0;
+        let persistenceData = {
+            H0: [], // Connected components
+            H1: []  // Loops
+        };
+
+        // Canvas setup
+        const networkCanvas = document.getElementById('networkCanvas');
+        const networkCtx = networkCanvas.getContext('2d');
+        const barcodeH0Canvas = document.getElementById('barcodeH0');
+        const barcodeH0Ctx = barcodeH0Canvas.getContext('2d');
+        const barcodeH1Canvas = document.getElementById('barcodeH1');
+        const barcodeH1Ctx = barcodeH1Canvas.getContext('2d');
+        const persistenceDiagramCanvas = document.getElementById('persistenceDiagram');
+        const persistenceDiagramCtx = persistenceDiagramCanvas.getContext('2d');
+
+        // Add node on click
+        networkCanvas.addEventListener('click', (e) => {
+            const rect = networkCanvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            nodes.push({x, y, id: nodes.length});
+            updateFiltration();
+        });
+
+        function clearNetwork() {
+            nodes = [];
+            edges = [];
+            simplicialComplex = [];
+            persistenceData = {H0: [], H1: []};
+            currentRadius = 0;
+            document.getElementById('radius').value = 0;
+            updateFiltration();
+        }
+
+        function addRandomNodes() {
+            for (let i = 0; i < 5; i++) {
+                nodes.push({
+                    x: Math.random() * 760 + 20,
+                    y: Math.random() * 360 + 20,
+                    id: nodes.length
+                });
+            }
+            updateFiltration();
+        }
+
+        function distance(a, b) {
+            return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
+        }
+
+        function updateFiltration() {
+            currentRadius = parseFloat(document.getElementById('radius').value);
+            document.getElementById('radiusValue').textContent = currentRadius.toFixed(0);
+            
+            // Build simplicial complex at current filtration value
+            edges = [];
+            simplicialComplex = [];
+            
+            // Add edges (1-simplices)
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = i + 1; j < nodes.length; j++) {
+                    if (distance(nodes[i], nodes[j]) <= currentRadius * 2) {
+                        edges.push([i, j]);
+                    }
+                }
+            }
+            
+            // Add triangles (2-simplices)
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = i + 1; j < nodes.length; j++) {
+                    for (let k = j + 1; k < nodes.length; k++) {
+                        if (distance(nodes[i], nodes[j]) <= currentRadius * 2 &&
+                            distance(nodes[j], nodes[k]) <= currentRadius * 2 &&
+                            distance(nodes[i], nodes[k]) <= currentRadius * 2) {
+                            simplicialComplex.push([i, j, k]);
+                        }
+                    }
+                }
+            }
+            
+            computePersistence();
+            drawNetwork();
+            drawBarcodes();
+            drawPersistenceDiagram();
+        }
+
+        function computePersistence() {
+            // Simplified persistence computation for visualization
+            persistenceData = {H0: [], H1: []};
+            
+            // Track connected components
+            let componentBirths = new Map();
+            nodes.forEach((node, i) => {
+                componentBirths.set(i, 0); // All nodes born at filtration 0
+            });
+            
+            // Simulate some persistence data
+            if (nodes.length > 0) {
+                // H0: Components that merge
+                for (let i = 0; i < Math.min(nodes.length - 1, 3); i++) {
+                    persistenceData.H0.push({
+                        birth: i * 20,
+                        death: (i + 1) * 40 + Math.random() * 20
+                    });
+                }
+                // One component persists forever
+                persistenceData.H0.push({
+                    birth: 0,
+                    death: Infinity
+                });
+                
+                // H1: Loops that form and die
+                if (simplicialComplex.length > 0) {
+                    for (let i = 0; i < Math.min(simplicialComplex.length, 2); i++) {
+                        persistenceData.H1.push({
+                            birth: 30 + i * 25,
+                            death: 60 + i * 30 + Math.random() * 20
+                        });
+                    }
+                }
+            }
+            
+            // Update UI
+            document.getElementById('components').textContent = 
+                edges.length > 0 ? countComponents() : nodes.length;
+            document.getElementById('loops').textContent = 
+                countLoops();
+        }
+
+        function countComponents() {
+            // Union-Find to count connected components
+            let parent = Array(nodes.length).fill(0).map((_, i) => i);
+            
+            function find(x) {
+                if (parent[x] !== x) parent[x] = find(parent[x]);
+                return parent[x];
+            }
+            
+            edges.forEach(([u, v]) => {
+                parent[find(u)] = find(v);
+            });
+            
+            return new Set(nodes.map((_, i) => find(i))).size;
+        }
+
+        function countLoops() {
+            // Simplified: count triangles as potential loops
+            return simplicialComplex.length;
+        }
+
+        function drawNetwork() {
+            networkCtx.fillStyle = '#0a0a0a';
+            networkCtx.fillRect(0, 0, networkCanvas.width, networkCanvas.height);
+            
+            // Draw filtration radius circles
+            networkCtx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            networkCtx.lineWidth = 1;
+            nodes.forEach(node => {
+                networkCtx.beginPath();
+                networkCtx.arc(node.x, node.y, currentRadius, 0, Math.PI * 2);
+                networkCtx.stroke();
+            });
+            
+            // Draw triangles (2-simplices)
+            networkCtx.fillStyle = 'rgba(78, 205, 196, 0.2)';
+            simplicialComplex.forEach(([i, j, k]) => {
+                networkCtx.beginPath();
+                networkCtx.moveTo(nodes[i].x, nodes[i].y);
+                networkCtx.lineTo(nodes[j].x, nodes[j].y);
+                networkCtx.lineTo(nodes[k].x, nodes[k].y);
+                networkCtx.closePath();
+                networkCtx.fill();
+            });
+            
+            // Draw edges
+            networkCtx.strokeStyle = '#00ff88';
+            networkCtx.lineWidth = 2;
+            edges.forEach(([i, j]) => {
+                networkCtx.beginPath();
+                networkCtx.moveTo(nodes[i].x, nodes[i].y);
+                networkCtx.lineTo(nodes[j].x, nodes[j].y);
+                networkCtx.stroke();
+            });
+            
+            // Draw nodes
+            nodes.forEach((node, i) => {
+                networkCtx.fillStyle = '#ff6b6b';
+                networkCtx.beginPath();
+                networkCtx.arc(node.x, node.y, 8, 0, Math.PI * 2);
+                networkCtx.fill();
+                
+                networkCtx.fillStyle = '#fff';
+                networkCtx.font = '12px monospace';
+                networkCtx.textAlign = 'center';
+                networkCtx.textBaseline = 'middle';
+                networkCtx.fillText(i, node.x, node.y);
+            });
+        }
+
+        function drawBarcodes() {
+            // Draw H0 barcode
+            barcodeH0Ctx.fillStyle = '#1a1a1a';
+            barcodeH0Ctx.fillRect(0, 0, barcodeH0Canvas.width, barcodeH0Canvas.height);
+            
+            barcodeH0Ctx.strokeStyle = '#444';
+            barcodeH0Ctx.beginPath();
+            barcodeH0Ctx.moveTo(40, 10);
+            barcodeH0Ctx.lineTo(40, 280);
+            barcodeH0Ctx.moveTo(40, 280);
+            barcodeH0Ctx.lineTo(360, 280);
+            barcodeH0Ctx.stroke();
+            
+            barcodeH0Ctx.fillStyle = '#ff6b6b';
+            barcodeH0Ctx.strokeStyle = '#ff6b6b';
+            barcodeH0Ctx.lineWidth = 4;
+            
+            persistenceData.H0.forEach((bar, i) => {
+                const y = 30 + i * 40;
+                const startX = 40 + (bar.birth / 150) * 320;
+                const endX = bar.death === Infinity ? 360 : 40 + (bar.death / 150) * 320;
+                
+                barcodeH0Ctx.beginPath();
+                barcodeH0Ctx.moveTo(startX, y);
+                barcodeH0Ctx.lineTo(endX, y);
+                barcodeH0Ctx.stroke();
+                
+                if (bar.death === Infinity) {
+                    // Arrow for infinite persistence
+                    barcodeH0Ctx.beginPath();
+                    barcodeH0Ctx.moveTo(endX - 10, y - 5);
+                    barcodeH0Ctx.lineTo(endX, y);
+                    barcodeH0Ctx.lineTo(endX - 10, y + 5);
+                    barcodeH0Ctx.stroke();
+                }
+            });
+            
+            // Draw H1 barcode
+            barcodeH1Ctx.fillStyle = '#1a1a1a';
+            barcodeH1Ctx.fillRect(0, 0, barcodeH1Canvas.width, barcodeH1Canvas.height);
+            
+            barcodeH1Ctx.strokeStyle = '#444';
+            barcodeH1Ctx.beginPath();
+            barcodeH1Ctx.moveTo(40, 10);
+            barcodeH1Ctx.lineTo(40, 280);
+            barcodeH1Ctx.moveTo(40, 280);
+            barcodeH1Ctx.lineTo(360, 280);
+            barcodeH1Ctx.stroke();
+            
+            barcodeH1Ctx.fillStyle = '#4ecdc4';
+            barcodeH1Ctx.strokeStyle = '#4ecdc4';
+            barcodeH1Ctx.lineWidth = 4;
+            
+            persistenceData.H1.forEach((bar, i) => {
+                const y = 30 + i * 40;
+                const startX = 40 + (bar.birth / 150) * 320;
+                const endX = 40 + (bar.death / 150) * 320;
+                
+                barcodeH1Ctx.beginPath();
+                barcodeH1Ctx.moveTo(startX, y);
+                barcodeH1Ctx.lineTo(endX, y);
+                barcodeH1Ctx.stroke();
+            });
+        }
+
+        function drawPersistenceDiagram() {
+            persistenceDiagramCtx.fillStyle = '#1a1a1a';
+            persistenceDiagramCtx.fillRect(0, 0, persistenceDiagramCanvas.width, persistenceDiagramCanvas.height);
+            
+            // Draw axes
+            persistenceDiagramCtx.strokeStyle = '#444';
+            persistenceDiagramCtx.lineWidth = 1;
+            persistenceDiagramCtx.beginPath();
+            persistenceDiagramCtx.moveTo(40, 360);
+            persistenceDiagramCtx.lineTo(360, 360);
+            persistenceDiagramCtx.moveTo(40, 360);
+            persistenceDiagramCtx.lineTo(40, 40);
+            persistenceDiagramCtx.stroke();
+            
+            // Draw diagonal
+            persistenceDiagramCtx.strokeStyle = '#666';
+            persistenceDiagramCtx.setLineDash([5, 5]);
+            persistenceDiagramCtx.beginPath();
+            persistenceDiagramCtx.moveTo(40, 360);
+            persistenceDiagramCtx.lineTo(360, 40);
+            persistenceDiagramCtx.stroke();
+            persistenceDiagramCtx.setLineDash([]);
+            
+            // Plot H0 points
+            persistenceDiagramCtx.fillStyle = '#ff6b6b';
+            persistenceData.H0.forEach(point => {
+                if (point.death !== Infinity) {
+                    const x = 40 + (point.birth / 150) * 320;
+                    const y = 360 - (point.death / 150) * 320;
+                    persistenceDiagramCtx.beginPath();
+                    persistenceDiagramCtx.arc(x, y, 5, 0, Math.PI * 2);
+                    persistenceDiagramCtx.fill();
+                }
+            });
+            
+            // Plot H1 points
+            persistenceDiagramCtx.fillStyle = '#4ecdc4';
+            persistenceData.H1.forEach(point => {
+                const x = 40 + (point.birth / 150) * 320;
+                const y = 360 - (point.death / 150) * 320;
+                persistenceDiagramCtx.beginPath();
+                persistenceDiagramCtx.arc(x, y, 5, 0, Math.PI * 2);
+                persistenceDiagramCtx.fill();
+            });
+            
+            // Labels
+            persistenceDiagramCtx.fillStyle = '#888';
+            persistenceDiagramCtx.font = '12px monospace';
+            persistenceDiagramCtx.fillText('Birth', 180, 380);
+            persistenceDiagramCtx.save();
+            persistenceDiagramCtx.translate(20, 200);
+            persistenceDiagramCtx.rotate(-Math.PI / 2);
+            persistenceDiagramCtx.fillText('Death', 0, 0);
+            persistenceDiagramCtx.restore();
+        }
+
+        // Initial setup
+        addRandomNodes();
+        updateFiltration();
+    </script>
+</body>
+</html>

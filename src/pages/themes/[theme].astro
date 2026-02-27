@@ -1,0 +1,87 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+import { getAnnotation } from '../../data/annotations';
+
+export async function getStaticPaths() {
+  const themes = await getCollection('themes');
+  return themes.map((theme) => ({
+    params: { theme: theme.slug },
+    props: { theme },
+  }));
+}
+
+const { theme } = Astro.props;
+const allWorks = await getCollection('works');
+
+// Filter works that belong to this theme
+const themeWorks = allWorks
+  .filter((work) => work.data.themes.includes(theme.slug))
+  .sort((a, b) => b.data.year - a.data.year); // Most recent first
+
+const { Content } = await theme.render();
+---
+
+<Base title={`${theme.data.title} · Bernie Hogan`}>
+  <p class="muted"><a href="/">← Bernie Hogan</a></p>
+  
+  <h1>{theme.data.title}</h1>
+  <p class="muted">{theme.data.focus}</p>
+  
+  <div style="margin: 2rem 0;">
+    <Content />
+  </div>
+
+  <h2>Works</h2>
+  
+  {themeWorks.map((work) => {
+    const annotation = getAnnotation(work.slug, theme.slug);
+    return (
+      <div class="work-entry">
+        <div class="work-entry-grid">
+          <div class="work-image">
+            <img src={work.data.image || '/images/works/placeholder.svg'} alt={work.data.title} />
+          </div>
+          <div class="work-text">
+            <div class="work-title">
+              <a href={`/works/${work.slug}`}>{work.data.title}</a>
+            </div>
+            <div class="work-meta">
+              {work.data.authors.join(', ')} · {work.data.year}
+              {work.data.venue && ` · ${work.data.venue}`}
+            </div>
+            {annotation && (
+              <p class="work-annotation">{annotation}</p>
+            )}
+            <span class="work-links">
+              {work.data.doi && (
+                <a href={`https://doi.org/${work.data.doi}`} class="work-link">DOI</a>
+              )}
+              {work.data.url && !work.data.doi && (
+                <a href={work.data.url} class="work-link">Link</a>
+              )}
+              {work.data.pdf && (
+                <a href={work.data.pdf} class="work-link">PDF</a>
+              )}
+              {work.data.preprint && (
+                <a href={work.data.preprint} class="work-link">Preprint</a>
+              )}
+            </span>
+            {work.data.themes.length > 1 && (
+              <p class="themes-list">
+                Also in: {work.data.themes
+                  .filter(t => t !== theme.slug)
+                  .map(t => <a href={`/themes/${t}`}>{t.replace(/-/g, ' ')}</a>)
+                  .reduce((prev, curr, i) => i === 0 ? [curr] : [...prev, ', ', curr], [])}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  })}
+
+  {themeWorks.length === 0 && (
+    <p class="muted">Works coming soon.</p>
+  )}
+</Base>

@@ -1,0 +1,28 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+
+const artifactThemes = await getCollection('artifactThemes');
+const sortedThemes = artifactThemes.sort((a, b) => a.data.order - b.data.order);
+---
+
+<Base title="Artifacts · Bernie Hogan">
+  <p class="muted"><a href="/">← Bernie Hogan</a></p>
+
+  <h1>Artifacts</h1>
+
+  <nav>
+    <ul class="theme-list">
+      {sortedThemes.map((theme) => (
+        <li>
+          <a href={`/artifact-themes/${theme.slug}`}>{theme.data.title}</a>
+          <span class="muted"> · {theme.data.focus}</span>
+        </li>
+      ))}
+    </ul>
+  </nav>
+
+  <p style="margin-top: 2rem;">
+    <a href="/artifacts/all">View all artifacts chronologically →</a>
+  </p>
+</Base>

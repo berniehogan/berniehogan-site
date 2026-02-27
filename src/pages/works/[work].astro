@@ -1,0 +1,68 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+import { getAnnotation } from '../../data/annotations';
+
+export async function getStaticPaths() {
+  const works = await getCollection('works');
+  return works.map((work) => ({
+    params: { work: work.slug },
+    props: { work },
+  }));
+}
+
+const { work } = Astro.props;
+const themes = await getCollection('themes');
+const { Content } = await work.render();
+
+// Get theme data for each theme this work appears in
+const workThemes = themes
+  .filter((t) => work.data.themes.includes(t.slug))
+  .sort((a, b) => a.data.order - b.data.order);
+---
+
+<Base title={`${work.data.title} · Bernie Hogan`}>
+  <p class="muted"><a href="/">← Bernie Hogan</a></p>
+  
+  <h1>{work.data.title}</h1>
+  
+  <p class="work-meta">
+    {work.data.authors.join(', ')} · {work.data.year}
+    {work.data.venue && ` · ${work.data.venue}`}
+  </p>
+
+  <span class="work-links">
+    {work.data.doi && (
+      <a href={`https://doi.org/${work.data.doi}`} class="work-link">DOI</a>
+    )}
+    {work.data.url && !work.data.doi && (
+      <a href={work.data.url} class="work-link">Link</a>
+    )}
+    {work.data.pdf && (
+      <a href={work.data.pdf} class="work-link">PDF</a>
+    )}
+    {work.data.preprint && (
+      <a href={work.data.preprint} class="work-link">Preprint</a>
+    )}
+  </span>
+
+  <div style="margin: 2rem 0;">
+    <Content />
+  </div>
+
+  <h2>Appears in themes</h2>
+  
+  {workThemes.map((theme) => {
+    const annotation = getAnnotation(work.slug, theme.slug);
+    return (
+      <div class="work-entry">
+        <div class="work-title">
+          <a href={`/themes/${theme.slug}`}>{theme.data.title}</a>
+        </div>
+        {annotation && (
+          <p class="work-annotation">{annotation}</p>
+        )}
+      </div>
+    );
+  })}
+</Base>

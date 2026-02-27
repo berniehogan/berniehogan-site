@@ -22,3 +22,6 @@ yarn-error.log*
 
 # Astro
 .astro/
+
+# Local inbox for media items to process
+media-inbox.md

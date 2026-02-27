@@ -88,3 +88,7 @@ The three terms play distinct roles:
 - **$\sigma^2$** is the irreducible error — noise inherent in the data-generating process. No model can eliminate it.
 
 The tradeoff arises because the tools that reduce bias (more flexible models, more parameters) typically increase variance, and vice versa. The proof makes precise what the diagram shows: total error is the sum of these three quantities, and minimising it requires balancing the first two.
+
+## References
+
+The bias-variance decomposition originates in Geman, S., Bienenstock, E., & Doursat, R. (1992). Neural networks and the bias/variance dilemma. *Neural Computation*, 4(1), 1–58. The proof presented here follows the standard textbook treatment found in Hastie, T., Tibshirani, R., & Friedman, J. (2009). *The Elements of Statistical Learning* (2nd ed.), Section 7.3. A more accessible presentation appears in James, G., Witten, D., Hastie, T., & Tibshirani, R. (2013). *An Introduction to Statistical Learning*, Section 2.2.

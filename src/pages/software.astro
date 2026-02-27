@@ -6,10 +6,10 @@ const software = await getCollection('software');
 const sorted = software.sort((a, b) => (b.data.year || 0) - (a.data.year || 0));
 ---
 
-<Base title="Software · Bernie Hogan">
+<Base title="Software & Code · Bernie Hogan">
   <p class="muted"><a href="/">← Bernie Hogan</a></p>
 
-  <h1>Software</h1>
+  <h1>Software and Code Resources</h1>
 
   {sorted.map(async (item) => {
     const { Content } = await item.render();
@@ -22,6 +22,9 @@ const sorted = software.sort((a, b) => (b.data.year || 0) - (a.data.year || 0));
             item.data.title
           )}
           {item.data.status && <span class="muted"> · {item.data.status}</span>}
+          {item.data.github && (
+            <span class="muted"> · <a href={`https://github.com/${item.data.github}`}>GitHub</a></span>
+          )}
         </div>
         {item.data.year && <div class="work-meta">{item.data.year}</div>}
         <div class="work-annotation"><Content /></div>

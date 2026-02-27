@@ -34,7 +34,17 @@ const software = defineCollection({
     title: z.string(),
     year: z.number().optional(),
     url: z.string().optional(),
+    github: z.string().optional(), // e.g., "berniehogan/introducingpython"
     status: z.string().optional(), // e.g., "active", "archived"
+  }),
+});
+
+const blog = defineCollection({
+  type: 'content',
+  schema: z.object({
+    title: z.string(),
+    date: z.coerce.date(),
+    description: z.string().optional(),
   }),
 });
 
@@ -87,4 +97,4 @@ const artifactThemes = defineCollection({
   }),
 });
 
-export const collections = { works, themes, software, students, press, consulting, artifacts, artifactThemes };
+export const collections = { works, themes, software, students, press, consulting, artifacts, artifactThemes, blog };

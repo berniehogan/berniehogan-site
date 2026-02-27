@@ -22,6 +22,13 @@ const sorted = posts.sort((a, b) => b.data.date.getTime() - a.data.date.getTime(
       {post.data.description && (
         <div class="work-annotation"><p>{post.data.description}</p></div>
       )}
+      {post.data.tags && post.data.tags.length > 0 && (
+        <div class="work-meta">
+          {post.data.tags.map((tag) => (
+            <a href={`/blog/tag/${tag}`} class="tag">{tag}</a>
+          ))}
+        </div>
+      )}
     </div>
   ))}
 </Base>

@@ -1,11 +1,17 @@
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   site: 'https://berniehogan.me',
   integrations: [react()],
+  markdown: {
+    remarkPlugins: [remarkMath],
+    rehypePlugins: [rehypeKatex],
+  },
 
   content: {
     collections: {
